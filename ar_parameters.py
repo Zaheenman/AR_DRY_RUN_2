@@ -22,12 +22,8 @@ AR_PARAMS = {
         "C_act_double_prime": 0.2905,
 
         "C_myo": 10.1,
-
-        # Carlson et al. (2008), Table 1:
-        # Eq. 6 constant for the non-metabolic (myogenic/shear) model.
         "C_tone_myo": -2.22,
-
-        # Eq. 7 constant when the metabolic term is included.
+        
         "C_tone_meta": 10.11,
     },
 
@@ -47,11 +43,7 @@ AR_PARAMS = {
 
         "C_myo": 35.9,
 
-        # Carlson et al. (2008), Table 1:
-        # Eq. 6 constant for the non-metabolic (myogenic/shear) model.
         "C_tone_myo": -0.53,
-
-        # Eq. 7 constant when the metabolic term is included.
         "C_tone_meta": 10.66,
     },
 }
