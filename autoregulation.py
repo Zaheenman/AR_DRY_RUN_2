@@ -14,13 +14,6 @@ def _frozen_or_current(
     enabled,
     name,
 ):
-    """
-    Return the current stimulus when the mechanism is active.
-
-    When myogenic or shear regulation is deactivated, Carlson et al.
-    hold the corresponding stimulus at its control-state value for the
-    calculation of S_tone.
-    """
 
     if enabled:
         return current_value
@@ -47,25 +40,6 @@ def tone_components(
     T_control=None,
     WSS_control=None,
 ):
-    """
-    Components of the Carlson-Arciero-Secomb vascular-tone stimulus.
-
-    Two different VSM constants are used in the paper:
-
-    Non-metabolic model (Eq. 6):
-        S_tone = C_myo*T - C_shear*WSS + C_tone
-
-    Metabolic model (Eq. 7):
-        S_tone = C_myo*T - C_shear*WSS
-                 - C_meta*Scr + C_tone_prime
-
-    Therefore:
-      * enable_meta=True  -> use C_tone_meta and the current Scr term.
-      * enable_meta=False -> use C_tone_myo and omit the metabolic term.
-
-    When myogenic or shear regulation is disabled, its stimulus is
-    frozen at the control value rather than deleting the term.
-    """
 
     T_used = _frozen_or_current(
         T,
