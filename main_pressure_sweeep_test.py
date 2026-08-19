@@ -6,11 +6,6 @@ from inputs import INPUT_FILE
 from solver import solve_network
 from coupling_solver import solve_coupled_ar, build_parameters
 
-
-# ============================================================
-# SETTINGS
-# ============================================================
-
 M0 = 8.28
 
 CONTROL_PRESSURE = 100.0
@@ -21,11 +16,6 @@ PRESSURE_STEP = 10.0
 
 DT = 0.1
 MAX_ITERATIONS = 5000
-
-
-# ============================================================
-# MECHANISM STATES
-# ============================================================
 
 MECHANISM_STATES = {
 
@@ -48,11 +38,6 @@ MECHANISM_STATES = {
     },
 }
 
-
-# ============================================================
-# SET PRESSURE
-# ============================================================
-
 def set_inlet_pressure(data, pressure):
 
     data = data.copy()
@@ -63,11 +48,6 @@ def set_inlet_pressure(data, pressure):
     ] = pressure
 
     return data
-
-
-# ============================================================
-# EXTRACT RESULTS
-# ============================================================
 
 def extract_row(
     pressure,
@@ -153,11 +133,6 @@ def extract_row(
             result["converged"],
     }
 
-
-# ============================================================
-# SOLVE ONE PRESSURE
-# ============================================================
-
 def solve_pressure(
     pressure,
     data_start,
@@ -190,10 +165,6 @@ def solve_pressure(
     )
 
 
-# ============================================================
-# PRINT RESULT
-# ============================================================
-
 def print_result(
     pressure,
     result,
@@ -215,11 +186,6 @@ def print_result(
         f"converged={result['converged']}"
     )
 
-
-# ============================================================
-# RUN ONE COMPLETELY INDEPENDENT MECHANISM STATE
-# ============================================================
-
 def run_pressure_sweep(
     mechanism_name,
     settings,
@@ -236,13 +202,6 @@ def run_pressure_sweep(
         f"Metabolic = {settings['enable_meta']}"
     )
 
-    # ========================================================
-    # HARD RESET
-    #
-    # Reload the ORIGINAL input file for every mechanism.
-    #
-    # Do not use data/results from the previous mechanism.
-    # ========================================================
 
     data_control = pd.read_csv(
         INPUT_FILE
@@ -253,17 +212,10 @@ def run_pressure_sweep(
         CONTROL_PRESSURE
     )
 
-    # ========================================================
-    # REBUILD CONTROL HEMODYNAMICS
-    # ========================================================
-
     control_results, control_summary = (
         solve_network(data_control)
     )
 
-    # ========================================================
-    # REBUILD PARAMETERS FROM ORIGINAL CONTROL STATE
-    # ========================================================
 
     parameters = build_parameters(
         control_results
@@ -282,10 +234,7 @@ def run_pressure_sweep(
         f"{control_summary['Q_total'] * 60e9:.6f} "
         f"uL/min"
     )
-
-    # ========================================================
-    # START THIS MECHANISM FROM 100 mmHg
-    # ========================================================
+=
 
     control_ar = solve_coupled_ar(
         data_control,
@@ -294,9 +243,7 @@ def run_pressure_sweep(
         control_results=control_results,
         parameters=parameters,
 
-        # IMPORTANT:
-        # Do not pass activation from another run.
-        # This starts from the default control activation.
+.
         initial_activations=None,
 
         enable_myo=settings["enable_myo"],
@@ -333,12 +280,6 @@ def run_pressure_sweep(
         control_ar,
     )
 
-    # ========================================================
-    # DOWNWARD SWEEP
-    #
-    # 100 -> 90 -> 80 -> ... -> 20
-    # ========================================================
-
     print()
     print("DOWNWARD SWEEP")
 
@@ -358,8 +299,6 @@ def run_pressure_sweep(
             control_ar["activation_SA"],
     }
 
-    # Myo + Shear is evaluated from 40 to 200 mmHg.
-    # The other mechanism states retain the original 20 to 200 mmHg range.
     min_pressure = (
         40.0
         if mechanism_name == "Myo + Shear"
@@ -405,10 +344,6 @@ def run_pressure_sweep(
 
             break
 
-        # ----------------------------------------
-        # ONLY continuation inside THIS mechanism
-        # ----------------------------------------
-
         current_data = (
             result["data"].copy()
         )
@@ -421,16 +356,6 @@ def run_pressure_sweep(
             "Small Arteriole":
                 result["activation_SA"],
         }
-
-    # ========================================================
-    # UPWARD SWEEP
-    #
-    # IMPORTANT:
-    # Do NOT continue from the 20-mmHg endpoint.
-    #
-    # Restart from THIS mechanism's
-    # original 100-mmHg equilibrium.
-    # ========================================================
 
     print()
     print("UPWARD SWEEP")
@@ -487,10 +412,6 @@ def run_pressure_sweep(
 
             break
 
-        # ----------------------------------------
-        # ONLY continuation inside THIS mechanism
-        # ----------------------------------------
-
         current_data = (
             result["data"].copy()
         )
@@ -504,9 +425,7 @@ def run_pressure_sweep(
                 result["activation_SA"],
         }
 
-    # ========================================================
-    # DATAFRAME
-    # ========================================================
+
 
     results = pd.DataFrame(rows)
 
@@ -516,10 +435,7 @@ def run_pressure_sweep(
         .reset_index(drop=True)
     )
 
-    # ========================================================
-    # NORMALIZATION
-    # ========================================================
-
+   
     control = results.loc[
         np.isclose(
             results["pressure_mmhg"],
@@ -543,9 +459,6 @@ def run_pressure_sweep(
         / Q100
     )
 
-    # ========================================================
-    # SAVE THIS STATE INDIVIDUALLY
-    # ========================================================
 
     safe_name = (
         mechanism_name
@@ -568,27 +481,15 @@ def run_pressure_sweep(
     print(
         "================================================"
     )
-
-    # Function exits here.
-    # All local solver states disappear.
-    # Next mechanism starts from INPUT_FILE again.
+  .
 
     return results
 
-
-# ============================================================
-# MAIN
-# ============================================================
 
 def main():
 
     all_results = []
 
-    # ========================================================
-    # RUN THREE STATES SEQUENTIALLY
-    #
-    # Each call performs a complete hard reset.
-    # ========================================================
 
     for (
         mechanism_name,
@@ -604,18 +505,6 @@ def main():
             result.copy()
         )
 
-        # There is deliberately no transfer of:
-        #
-        # data
-        # activation
-        # control_results
-        # parameters
-        #
-        # into the next mechanism.
-
-    # ========================================================
-    # COMBINE ONLY THE FINISHED DATAFRAMES
-    # ========================================================
 
     results_all = pd.concat(
         all_results,
@@ -626,10 +515,7 @@ def main():
         "results_pressure_sweep_three_states.csv",
         index=False
     )
-
-    # ========================================================
-    # PRINT RESULTS
-    # ========================================================
+=
 
     print()
     print("================================================")
@@ -660,9 +546,6 @@ def main():
         )
     )
 
-    # ========================================================
-    # THREE STATES ON ONE PLOT
-    # ========================================================
 
     fig, ax = plt.subplots(
         figsize=(7, 5)
@@ -743,7 +626,6 @@ def main():
         "pressure_vs_normalized_perfusion_three_states.png",
         dpi=300
     )
-        # Save selected sweep results
     results_sweep = results_all[
         [
             "mechanism",
